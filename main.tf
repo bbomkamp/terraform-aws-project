@@ -66,3 +66,25 @@ resource "aws_instance" "example2" {
     Name = "MyInstance2"                          # Assign a name tag to the instance.
   }
 }
+
+# Create an Internet Gateway to provide internet access to your VPC
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+# Create a route table to route internet traffic through the Internet Gateway
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"                 # Route all traffic to the internet
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "PublicRouteTable"
+  }
+}
