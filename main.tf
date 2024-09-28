@@ -52,21 +52,6 @@ resource "aws_security_group" "allow_ssh" {
   }
 }
 
-# Create an EC2 instance
-# EC2 (Elastic Compute Cloud) is a web service that provides resizable compute capacity in the cloud.
-# An EC2 instance is a virtual server in AWS that you can use to run applications.
-resource "aws_instance" "example2" {
-  ami                    = "ami-08d8ac128e0a1b91c"  # Specify the Amazon Machine Image (AMI) ID to use for the instance.
-                                                      # An AMI provides the information required to launch an instance.
-  instance_type         = "t2.micro"                 # Specify the instance type; t2.micro is a low-cost, general-purpose instance type.
-  subnet_id             = aws_subnet.my_subnet.id    # Place the instance in the created subnet so it can communicate with other resources.
-  vpc_security_group_ids = [aws_security_group.allow_ssh.id]  # Attach the security group to the instance for controlling traffic.
-  user_data             = file("user-data.sh")       # Provide a user data script to execute on instance startup; useful for automation (like installing software).
-  tags = {                                           # Assign tags to the instance for better identification and management.
-    Name = "MyInstance2"                          # Assign a name tag to the instance.
-  }
-}
-
 # Create an Internet Gateway to provide internet access to your VPC
 resource "aws_internet_gateway" "my_igw" {
   vpc_id = aws_vpc.my_vpc.id
@@ -86,5 +71,26 @@ resource "aws_route_table" "public_rt" {
 
   tags = {
     Name = "PublicRouteTable"
+  }
+}
+
+# Associate the route table with your subnet
+resource "aws_route_table_association" "my_rt_association" {
+  subnet_id      = aws_subnet.my_subnet.id   # Associate the route table with your subnet
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Create an EC2 instance
+# EC2 (Elastic Compute Cloud) is a web service that provides resizable compute capacity in the cloud.
+# An EC2 instance is a virtual server in AWS that you can use to run applications.
+resource "aws_instance" "example2" {
+  ami                    = "ami-08d8ac128e0a1b91c"  # Specify the Amazon Machine Image (AMI) ID to use for the instance.
+  instance_type          = "t2.micro"               # Specify the instance type; t2.micro is a low-cost, general-purpose instance type.
+  subnet_id              = aws_subnet.my_subnet.id  # Place the instance in the created subnet so it can communicate with other resources.
+  vpc_security_group_ids = [aws_security_group.allow_ssh.id]  # Attach the security group to the instance for controlling traffic.
+  associate_public_ip_address = true                # Ensure the instance gets a public IP
+  user_data              = file("user-data.sh")     # Provide a user data script to execute on instance startup; useful for automation (like installing software).
+  tags = {                                           # Assign tags to the instance for better identification and management.
+    Name = "MyInstance2"                          # Assign a name tag to the instance.
   }
 }
